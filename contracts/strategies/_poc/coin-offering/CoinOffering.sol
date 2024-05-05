@@ -292,6 +292,8 @@ contract CoinOfferingStrategy is Native, BaseStrategy, Multicall {
         review.reviewStartDate = block.timestamp;
         review.reviewEndDate = review.reviewStartDate + reviewPeriod;
 
+        // todo: add governance reward and claim
+
         emit RecipientRegistered(
             recipientId, recipientAddress, metadata, offeringAmount, offeringPeriod, tokenAddress, maxAllocationPerUser
         );
@@ -336,21 +338,35 @@ contract CoinOfferingStrategy is Native, BaseStrategy, Multicall {
         emit Allocated(recipientId, amount, poolToken, _sender);
     }
 
-    function _distribute(address[] memory _recipientIds, bytes memory _data, address _sender) internal override {
+    function _distribute(address[] memory _recipientIds, bytes memory, address _sender) internal override {
         // todo: implement "claiming" for recipients
+        // get recipient and allocation
+        uint256 length = _recipientIds.length;
+
+        for (uint256 i = 0; i < length; i++) {
+            Recipient storage recipient = recipients[_recipientIds[i]];
+            Allocations storage allocation = allocations[_recipientIds[i]];
+            // todo: implement "claiming" for recipients
+
+            // calculate cut
+
+        }
+    }
+
+    // todo: implement withdraw when rejected
+
+    
+    function reviewRecipients(address[] memory recipientIds, bool[] memory approvals) external {
+        uint256 length = recipientIds.length;
+        for (uint256 i = 0; i < length; i++) {
+            _reviewRecipient(recipientIds[i], approvals[i]);
+        }
     }
 
     /// @notice Returns the payout summary for the accepted recipient.
     /// @dev This will revert by default.
     function _getPayout(address, bytes memory) internal pure override returns (PayoutSummary memory) {
         revert();
-    }
-
-    function reviewRecipients(address[] memory recipientIds, bool[] memory approvals) external {
-        uint256 length = recipientIds.length;
-        for (uint256 i = 0; i < length; i++) {
-            _reviewRecipient(recipientIds[i], approvals[i]);
-        }
     }
 
     function _reviewRecipient(address recipientId, bool approve) internal onlyPoolManager(msg.sender) {
